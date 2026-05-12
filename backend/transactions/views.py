@@ -48,12 +48,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
         date_from = self.request.query_params.get('date_from')
         date_to = self.request.query_params.get('date_to')
         category_type = self.request.query_params.get('type')
+        amount_min = self.request.query_params.get('amount_min')
+        amount_max = self.request.query_params.get('amount_max')
+        categories = self.request.query_params.get('categories')
         if date_from:
             qs = qs.filter(date__gte=date_from)
         if date_to:
             qs = qs.filter(date__lte=date_to)
         if category_type:
             qs = qs.filter(category__type=category_type)
+        if amount_min:
+            qs = qs.filter(amount__gte=amount_min)
+        if amount_max:
+            qs = qs.filter(amount__lte=amount_max)
+        if categories:
+            cat_ids = [int(c) for c in categories.split(',') if c.strip().isdigit()]
+            if cat_ids:
+                qs = qs.filter(category_id__in=cat_ids)
         return qs
 
     @action(detail=False, methods=['post'], url_path='import-csv')
@@ -190,6 +201,110 @@ def stats_by_category(request):
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stats_balance_trend(request):
+    month = int(request.query_params.get('month', datetime.now().month))
+    year = int(request.query_params.get('year', datetime.now().year))
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    results = []
+    for i in range(5, -1, -1):
+        m = month - i
+        y = year
+        while m <= 0:
+            m += 12
+            y -= 1
+        qs = Transaction.objects.filter(user=request.user, date__month=m, date__year=y)
+        inc = qs.filter(category__type='income').aggregate(total=Sum('amount'))['total'] or 0
+        exp = qs.filter(category__type='expense').aggregate(total=Sum('amount'))['total'] or 0
+        results.append({
+            'label': f'{month_names[m - 1]} {y}',
+            'balance': float(inc - exp),
+        })
+    cumulative = []
+    running = 0
+    for r in results:
+        running += r['balance']
+        cumulative.append({'label': r['label'], 'balance': round(running, 2)})
+    return Response(cumulative)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stats_monthly_report(request):
+    month = int(request.query_params.get('month', datetime.now().month))
+    year = int(request.query_params.get('year', datetime.now().year))
+
+    prev_month = month - 1
+    prev_year = year
+    if prev_month <= 0:
+        prev_month += 12
+        prev_year -= 1
+
+    qs_current = Transaction.objects.filter(user=request.user, date__month=month, date__year=year)
+    qs_prev = Transaction.objects.filter(user=request.user, date__month=prev_month, date__year=prev_year)
+
+    curr_income = float(qs_current.filter(category__type='income').aggregate(total=Sum('amount'))['total'] or 0)
+    curr_expenses = float(qs_current.filter(category__type='expense').aggregate(total=Sum('amount'))['total'] or 0)
+    prev_income = float(qs_prev.filter(category__type='income').aggregate(total=Sum('amount'))['total'] or 0)
+    prev_expenses = float(qs_prev.filter(category__type='expense').aggregate(total=Sum('amount'))['total'] or 0)
+
+    def pct_change(curr, prev):
+        if prev == 0:
+            return 100.0 if curr > 0 else 0.0
+        return round((curr - prev) / prev * 100, 1)
+
+    top_categories = list(
+        qs_current.filter(category__type='expense')
+        .values('category__id', 'category__name', 'category__color')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')[:5]
+    )
+
+    from budgets.models import Budget
+    budgets = Budget.objects.filter(user=request.user, month=month, year=year).select_related('category')
+    budget_adherence = []
+    for b in budgets:
+        spent = float(
+            qs_current.filter(category=b.category).aggregate(total=Sum('amount'))['total'] or 0
+        )
+        budget_adherence.append({
+            'category': b.category.name,
+            'category_color': b.category.color,
+            'budgeted': float(b.amount),
+            'spent': spent,
+            'percentage': round(spent / float(b.amount) * 100, 1) if float(b.amount) else 0,
+        })
+
+    return Response({
+        'current': {
+            'income': curr_income,
+            'expenses': curr_expenses,
+            'balance': curr_income - curr_expenses,
+        },
+        'previous': {
+            'income': prev_income,
+            'expenses': prev_expenses,
+            'balance': prev_income - prev_expenses,
+        },
+        'changes': {
+            'income': pct_change(curr_income, prev_income),
+            'expenses': pct_change(curr_expenses, prev_expenses),
+            'balance': pct_change(curr_income - curr_expenses, prev_income - prev_expenses),
+        },
+        'top_categories': [
+            {
+                'id': c['category__id'],
+                'name': c['category__name'],
+                'color': c['category__color'],
+                'total': float(c['total']),
+            }
+            for c in top_categories
+        ],
+        'budget_adherence': budget_adherence,
+    })
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):

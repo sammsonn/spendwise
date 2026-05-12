@@ -20,15 +20,25 @@
       <button class="btn btn-secondary" @click="transactionStore.exportPDF()">Export PDF</button>
     </div>
 
+    <!-- Date Presets -->
+    <div class="date-presets">
+      <button class="btn btn-preset" :class="{ active: activePreset === 'week' }" @click="setPreset('week')">This Week</button>
+      <button class="btn btn-preset" :class="{ active: activePreset === '7days' }" @click="setPreset('7days')">Last 7 Days</button>
+      <button class="btn btn-preset" :class="{ active: activePreset === 'month' }" @click="setPreset('month')">This Month</button>
+      <button class="btn btn-preset" :class="{ active: activePreset === '30days' }" @click="setPreset('30days')">Last 30 Days</button>
+      <button class="btn btn-preset" :class="{ active: activePreset === 'year' }" @click="setPreset('year')">This Year</button>
+      <button v-if="activePreset" class="btn btn-preset" @click="clearPreset">Clear</button>
+    </div>
+
     <!-- Filters -->
     <div class="filter-bar">
       <div class="filter-group">
         <label>From</label>
-        <input v-model="filters.date_from" type="date" @change="applyFilters" />
+        <input v-model="filters.date_from" type="date" @change="activePreset = ''; applyFilters()" />
       </div>
       <div class="filter-group">
         <label>To</label>
-        <input v-model="filters.date_to" type="date" @change="applyFilters" />
+        <input v-model="filters.date_to" type="date" @change="activePreset = ''; applyFilters()" />
       </div>
       <div class="filter-group">
         <label>Category</label>
@@ -46,6 +56,14 @@
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </select>
+      </div>
+      <div class="filter-group">
+        <label>Min Amount</label>
+        <input v-model="filters.amount_min" type="number" step="0.01" placeholder="0.00" @change="applyFilters" />
+      </div>
+      <div class="filter-group">
+        <label>Max Amount</label>
+        <input v-model="filters.amount_max" type="number" step="0.01" placeholder="0.00" @change="applyFilters" />
       </div>
       <div class="filter-group">
         <label>Search</label>
@@ -167,12 +185,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTransactionStore, type Transaction } from '@/stores/transactions'
 import { useCategoryStore } from '@/stores/categories'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()
+const route = useRoute()
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
@@ -185,7 +205,11 @@ const filters = reactive<{
   category?: number
   type?: string
   search?: string
+  amount_min?: string
+  amount_max?: string
 }>({})
+
+const activePreset = ref('')
 
 const showModal = ref(false)
 const editingTransaction = ref<Transaction | null>(null)
@@ -203,14 +227,68 @@ const form = reactive({
 const totalPages = computed(() => Math.max(1, Math.ceil(transactionStore.totalCount / PAGE_SIZE)))
 
 onMounted(async () => {
+  if (route.query.category) {
+    filters.category = Number(route.query.category)
+  }
   await Promise.all([
-    transactionStore.fetchTransactions(),
+    transactionStore.fetchTransactions(filters.category ? { category: filters.category } : undefined),
     categoryStore.fetchCategories(),
   ])
 })
 
 function applyFilters() {
   transactionStore.fetchTransactions({ ...filters, page: 1 })
+}
+
+function formatDate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function setPreset(preset: string) {
+  activePreset.value = preset
+  const today = new Date()
+  switch (preset) {
+    case 'week': {
+      const day = today.getDay()
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - ((day + 6) % 7))
+      filters.date_from = formatDate(monday)
+      filters.date_to = formatDate(today)
+      break
+    }
+    case '7days': {
+      const d = new Date(today)
+      d.setDate(today.getDate() - 6)
+      filters.date_from = formatDate(d)
+      filters.date_to = formatDate(today)
+      break
+    }
+    case 'month': {
+      filters.date_from = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+      filters.date_to = formatDate(today)
+      break
+    }
+    case '30days': {
+      const d = new Date(today)
+      d.setDate(today.getDate() - 29)
+      filters.date_from = formatDate(d)
+      filters.date_to = formatDate(today)
+      break
+    }
+    case 'year': {
+      filters.date_from = `${today.getFullYear()}-01-01`
+      filters.date_to = formatDate(today)
+      break
+    }
+  }
+  applyFilters()
+}
+
+function clearPreset() {
+  activePreset.value = ''
+  filters.date_from = undefined
+  filters.date_to = undefined
+  applyFilters()
 }
 
 function changePage(page: number) {
@@ -306,7 +384,6 @@ async function handleImportCSV(event: Event) {
   padding: 28px 20px;
 }
 
-/* Page header */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -319,11 +396,10 @@ async function handleImportCSV(event: Event) {
 .page-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-/* Toolbar */
 .toolbar {
   display: flex;
   gap: 8px;
@@ -331,15 +407,43 @@ async function handleImportCSV(event: Event) {
   flex-wrap: wrap;
 }
 
-/* Filters */
+.date-presets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-preset {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-preset:hover {
+  background: var(--color-bg-secondary);
+}
+
+.btn-preset.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
 .filter-bar {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
-  background: #fff;
+  background: var(--color-bg-card);
   padding: 16px 20px;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
   flex-wrap: wrap;
 }
 
@@ -354,31 +458,31 @@ async function handleImportCSV(event: Event) {
 .filter-group label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .filter-group input,
 .filter-group select {
   padding: 9px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
-  background: #fff;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
 }
 
 .filter-group input:focus,
 .filter-group select:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
-/* Table */
 .table-container {
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
   overflow-x: auto;
 }
 
@@ -394,19 +498,19 @@ th {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
 }
 
 td {
   padding: 12px 16px;
   font-size: 0.875rem;
-  color: #0f172a;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-bg-secondary);
 }
 
 .category-cell {
@@ -433,18 +537,18 @@ tbody tr:hover {
 }
 
 .badge-income {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--color-badge-income-bg);
+  color: var(--color-badge-income-text);
 }
 
 .badge-expense {
-  background: #fff1f2;
-  color: #e11d48;
+  background: var(--color-badge-expense-bg);
+  color: var(--color-badge-expense-text);
 }
 
 .badge-recurring {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--color-badge-recurring-bg);
+  color: var(--color-badge-recurring-text);
   margin-left: 4px;
 }
 
@@ -460,27 +564,26 @@ tbody tr:hover {
 
 .btn-action {
   background: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 4px 10px;
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
   transition: background 0.15s, border-color 0.15s;
 }
 
 .btn-action:hover {
-  background: #f1f5f9;
+  background: var(--color-bg-secondary);
 }
 
 .btn-action-danger:hover {
-  background: #fff1f2;
-  border-color: #fca5a5;
-  color: #e11d48;
+  background: var(--color-btn-danger-hover-bg);
+  border-color: var(--color-btn-danger-hover-border);
+  color: var(--color-expense);
 }
 
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -491,17 +594,16 @@ tbody tr:hover {
 
 .page-info {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .empty-state {
   text-align: center;
   padding: 48px 16px;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-size: 0.875rem;
 }
 
-/* Buttons */
 .btn {
   padding: 9px 18px;
   border: none;
@@ -518,28 +620,27 @@ tbody tr:hover {
 }
 
 .btn-primary {
-  background: #0d9488;
+  background: var(--color-accent);
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0f766e;
+  background: var(--color-accent-hover);
 }
 
 .btn-secondary {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #e2e8f0;
+  background: var(--color-border);
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--color-modal-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -548,21 +649,21 @@ tbody tr:hover {
 }
 
 .modal {
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: 16px;
   padding: 28px;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--color-shadow-lg);
 }
 
 .modal h2 {
   margin: 0 0 24px;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 .form-group {
@@ -574,7 +675,7 @@ tbody tr:hover {
   margin-bottom: 6px;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .form-group input[type='text'],
@@ -583,19 +684,20 @@ tbody tr:hover {
 .form-group select {
   width: 100%;
   padding: 9px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.875rem;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
-  background: #fff;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .checkbox-group label {
@@ -606,7 +708,7 @@ tbody tr:hover {
 }
 
 .checkbox-group input[type='checkbox'] {
-  accent-color: #0d9488;
+  accent-color: var(--color-accent);
   width: 16px;
   height: 16px;
 }

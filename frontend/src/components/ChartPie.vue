@@ -11,6 +11,10 @@ const props = defineProps<{
   colors: string[]
 }>()
 
+const emit = defineEmits<{
+  sliceClick: [index: number, label: string]
+}>()
+
 const hasData = computed(() => props.data.length > 0 && props.data.some((v) => v > 0))
 
 const chartData = computed(() => ({
@@ -24,9 +28,15 @@ const chartData = computed(() => ({
   ],
 }))
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  onClick: (_event: any, elements: any[]) => {
+    if (elements.length > 0) {
+      const idx = elements[0].index
+      emit('sliceClick', idx, props.labels[idx])
+    }
+  },
   plugins: {
     legend: {
       position: 'bottom' as const,
@@ -47,7 +57,7 @@ const chartOptions = {
       },
     },
   },
-}
+}))
 </script>
 
 <template>
@@ -68,7 +78,7 @@ const chartOptions = {
 }
 
 .no-data {
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-size: 0.95rem;
   font-weight: 500;
 }

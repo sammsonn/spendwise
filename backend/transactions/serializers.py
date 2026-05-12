@@ -83,12 +83,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     preferred_currency_symbol = serializers.CharField(
         source='profile.preferred_currency.symbol', read_only=True,
     )
+    dark_mode = serializers.BooleanField(
+        source='profile.dark_mode',
+    )
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
             'preferred_currency', 'preferred_currency_code', 'preferred_currency_symbol',
+            'dark_mode',
         ]
         read_only_fields = ['id', 'username']
 
@@ -99,5 +103,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             profile, _ = UserProfile.objects.get_or_create(user=instance)
             if 'preferred_currency' in profile_data:
                 profile.preferred_currency = profile_data['preferred_currency']
-                profile.save()
+            if 'dark_mode' in profile_data:
+                profile.dark_mode = profile_data['dark_mode']
+            profile.save()
         return instance

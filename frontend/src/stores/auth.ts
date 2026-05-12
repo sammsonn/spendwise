@@ -7,9 +7,27 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(localStorage.getItem('access_token') || '')
   const refreshToken = ref(localStorage.getItem('refresh_token') || '')
   const user = ref<any>(null)
+  const darkMode = ref(localStorage.getItem('dark_mode') === 'true')
 
   const isAuthenticated = computed(() => !!accessToken.value)
   const currencySymbol = computed(() => user.value?.preferred_currency_symbol || 'lei')
+
+  function applyTheme() {
+    document.documentElement.classList.toggle('dark', darkMode.value)
+    localStorage.setItem('dark_mode', String(darkMode.value))
+  }
+
+  async function toggleDarkMode() {
+    darkMode.value = !darkMode.value
+    applyTheme()
+    if (isAuthenticated.value) {
+      try {
+        await api.put('/auth/profile/', { dark_mode: darkMode.value })
+      } catch {
+        // theme applied locally even if sync fails
+      }
+    }
+  }
 
   async function login(username: string, password: string) {
     const { data } = await api.post('/auth/login/', { username, password })
@@ -43,6 +61,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const { data } = await api.get('/auth/profile/')
       user.value = data
+      darkMode.value = !!data.dark_mode
+      applyTheme()
     } catch {
       // ignore
     }
@@ -57,5 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login')
   }
 
-  return { accessToken, refreshToken, user, isAuthenticated, currencySymbol, login, register, refresh, fetchProfile, logout }
+  applyTheme()
+
+  return { accessToken, refreshToken, user, isAuthenticated, currencySymbol, darkMode, login, register, refresh, fetchProfile, logout, toggleDarkMode, applyTheme }
 })

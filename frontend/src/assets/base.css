@@ -1,3 +1,101 @@
+:root {
+  --color-bg-primary: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-bg-secondary: #f1f5f9;
+  --color-bg-input: #ffffff;
+  --color-bg-sidebar: #0f172a;
+  --color-bg-sidebar-hover: #1e293b;
+  --color-bg-topbar: #ffffff;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-placeholder: #94a3b8;
+  --color-text-sidebar: #94a3b8;
+  --color-text-sidebar-hover: #f1f5f9;
+  --color-text-sidebar-active: #ffffff;
+
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-border-sidebar: rgba(255, 255, 255, 0.08);
+
+  --color-accent: #0d9488;
+  --color-accent-hover: #0f766e;
+  --color-accent-ring: rgba(13, 148, 136, 0.1);
+
+  --color-income: #059669;
+  --color-expense: #e11d48;
+  --color-warning: #d97706;
+
+  --color-badge-income-bg: #ecfdf5;
+  --color-badge-income-text: #059669;
+  --color-badge-expense-bg: #fff1f2;
+  --color-badge-expense-text: #e11d48;
+  --color-badge-recurring-bg: #eff6ff;
+  --color-badge-recurring-text: #2563eb;
+  --color-badge-warning-bg: #fef3c7;
+
+  --color-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --color-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --color-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --color-modal-overlay: rgba(15, 23, 42, 0.4);
+
+  --color-input-disabled-bg: #f8fafc;
+  --color-input-disabled-text: #94a3b8;
+  --color-logout-hover: #fca5a5;
+  --color-btn-danger-hover-bg: #fff1f2;
+  --color-btn-danger-hover-border: #fca5a5;
+}
+
+html.dark {
+  --color-bg-primary: #0f172a;
+  --color-bg-card: #1e293b;
+  --color-bg-secondary: #334155;
+  --color-bg-input: #1e293b;
+  --color-bg-sidebar: #020617;
+  --color-bg-sidebar-hover: #0f172a;
+  --color-bg-topbar: #1e293b;
+
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-text-placeholder: #64748b;
+  --color-text-sidebar: #94a3b8;
+  --color-text-sidebar-hover: #f1f5f9;
+  --color-text-sidebar-active: #ffffff;
+
+  --color-border: #334155;
+  --color-border-light: #1e293b;
+  --color-border-sidebar: rgba(255, 255, 255, 0.06);
+
+  --color-accent: #14b8a6;
+  --color-accent-hover: #0d9488;
+  --color-accent-ring: rgba(20, 184, 166, 0.15);
+
+  --color-income: #34d399;
+  --color-expense: #fb7185;
+  --color-warning: #fbbf24;
+
+  --color-badge-income-bg: rgba(5, 150, 105, 0.15);
+  --color-badge-income-text: #34d399;
+  --color-badge-expense-bg: rgba(225, 29, 72, 0.15);
+  --color-badge-expense-text: #fb7185;
+  --color-badge-recurring-bg: rgba(37, 99, 235, 0.15);
+  --color-badge-recurring-text: #60a5fa;
+  --color-badge-warning-bg: rgba(217, 119, 6, 0.15);
+
+  --color-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --color-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  --color-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --color-modal-overlay: rgba(2, 6, 23, 0.6);
+
+  --color-input-disabled-bg: #0f172a;
+  --color-input-disabled-text: #64748b;
+  --color-logout-hover: #fca5a5;
+  --color-btn-danger-hover-bg: rgba(225, 29, 72, 0.15);
+  --color-btn-danger-hover-border: rgba(252, 165, 165, 0.3);
+}
+
 *,
 *::before,
 *::after {
@@ -12,13 +110,14 @@ html {
 
 body {
   min-height: 100vh;
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
   line-height: 1.5;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 img,

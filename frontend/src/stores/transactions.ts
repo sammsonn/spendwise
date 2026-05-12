@@ -24,6 +24,8 @@ export interface TransactionFilters {
   category?: number
   type?: string
   search?: string
+  amount_min?: string
+  amount_max?: string
   page?: number
 }
 
@@ -42,6 +44,8 @@ export const useTransactionStore = defineStore('transactions', () => {
       if (filters.category) params.category = filters.category
       if (filters.type) params.type = filters.type
       if (filters.search) params.search = filters.search
+      if (filters.amount_min) params.amount_min = filters.amount_min
+      if (filters.amount_max) params.amount_max = filters.amount_max
       const { data } = await api.get('/transactions/', { params })
       transactions.value = data.results
       totalCount.value = data.count
