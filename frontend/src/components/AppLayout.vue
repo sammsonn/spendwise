@@ -33,6 +33,12 @@ function logout() {
         <RouterLink to="/budgets" class="nav-link" :class="{ active: route.path.startsWith('/budgets') }">
           Budgets
         </RouterLink>
+        <RouterLink to="/goals" class="nav-link" :class="{ active: route.path.startsWith('/goals') }">
+          Goals
+        </RouterLink>
+        <RouterLink to="/reports" class="nav-link" :class="{ active: route.path.startsWith('/reports') }">
+          Reports
+        </RouterLink>
         <RouterLink to="/settings" class="nav-link" :class="{ active: route.path.startsWith('/settings') }">
           Settings
         </RouterLink>
@@ -65,7 +71,6 @@ function logout() {
   min-height: 100vh;
 }
 
-/* ---- Sidebar ---- */
 .sidebar {
   width: 240px;
   min-width: 240px;
@@ -74,8 +79,8 @@ function logout() {
   top: 0;
   display: flex;
   flex-direction: column;
-  background-color: #0f172a;
-  color: #94a3b8;
+  background-color: var(--color-bg-sidebar);
+  color: var(--color-text-sidebar);
   overflow-y: auto;
 }
 
@@ -83,7 +88,7 @@ function logout() {
   display: flex;
   align-items: center;
   padding: 24px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border-sidebar);
 }
 
 .app-logo {
@@ -92,7 +97,6 @@ function logout() {
   max-height: 120px;
 }
 
-/* ---- Navigation ---- */
 .sidebar-nav {
   flex: 1;
   display: flex;
@@ -106,7 +110,7 @@ function logout() {
   align-items: center;
   padding: 10px 20px;
   border-left: 3px solid transparent;
-  color: #94a3b8;
+  color: var(--color-text-sidebar);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -114,21 +118,20 @@ function logout() {
 }
 
 .nav-link:hover {
-  background-color: #1e293b;
-  color: #f1f5f9;
+  background-color: var(--color-bg-sidebar-hover);
+  color: var(--color-text-sidebar-hover);
 }
 
 .nav-link.active {
-  border-left-color: #0d9488;
-  background-color: #1e293b;
-  color: #ffffff;
+  border-left-color: var(--color-accent);
+  background-color: var(--color-bg-sidebar-hover);
+  color: var(--color-text-sidebar-active);
   font-weight: 600;
 }
 
-/* ---- Sidebar Footer ---- */
 .sidebar-footer {
   padding: 16px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--color-border-sidebar);
 }
 
 .logout-btn {
@@ -138,7 +141,7 @@ function logout() {
   padding: 10px 23px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--color-text-sidebar);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -146,22 +149,21 @@ function logout() {
 }
 
 .logout-btn:hover {
-  color: #fca5a5;
+  color: var(--color-logout-hover);
 }
 
-/* ---- Main Content Area ---- */
 .main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   overflow-y: auto;
-  background-color: #f8fafc;
+  background-color: var(--color-bg-primary);
 }
 
 .top-bar {
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--color-bg-topbar);
+  border-bottom: 1px solid var(--color-border);
   padding: 0 32px;
   height: 56px;
   display: flex;
@@ -181,7 +183,7 @@ function logout() {
 .greeting {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .page-content {

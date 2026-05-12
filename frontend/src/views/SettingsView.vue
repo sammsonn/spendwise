@@ -47,6 +47,21 @@
         </div>
       </form>
     </div>
+
+    <div class="settings-card">
+      <h2>Appearance</h2>
+      <div class="theme-toggle">
+        <span class="theme-toggle-label">Dark Mode</span>
+        <button
+          class="toggle-switch"
+          :class="{ active: authStore.darkMode }"
+          @click="authStore.toggleDarkMode()"
+          type="button"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -130,15 +145,15 @@ async function saveCurrency() {
 .settings-page h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin: 0 0 24px;
 }
 
 .settings-card {
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: 12px;
   padding: 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
   margin-bottom: 20px;
 }
 
@@ -146,7 +161,7 @@ async function saveCurrency() {
   margin: 0 0 24px;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 .form-group {
@@ -158,31 +173,32 @@ async function saveCurrency() {
   margin-bottom: 6px;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 9px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.875rem;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
-  background: #fff;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .input-disabled {
-  background: #f8fafc;
-  color: #94a3b8;
+  background: var(--color-input-disabled-bg);
+  color: var(--color-input-disabled-text);
   cursor: not-allowed;
 }
 
@@ -206,11 +222,55 @@ async function saveCurrency() {
 }
 
 .btn-primary {
-  background: #0d9488;
+  background: var(--color-accent);
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0f766e;
+  background: var(--color-accent-hover);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.theme-toggle-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: var(--color-border);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  padding: 0;
+}
+
+.toggle-switch.active {
+  background: var(--color-accent);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(22px);
 }
 </style>

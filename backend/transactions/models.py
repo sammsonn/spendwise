@@ -18,6 +18,7 @@ class Currency(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     preferred_currency = models.ForeignKey(Currency, on_delete=models.PROTECT, default=1)
+    dark_mode = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} profile"

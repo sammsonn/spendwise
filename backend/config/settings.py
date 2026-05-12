@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django_filters',
     'transactions',
     'budgets',
+    'goals',
 ]
 
 MIDDLEWARE = [

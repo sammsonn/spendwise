@@ -80,17 +80,16 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc;
+  background-color: var(--color-bg-primary);
   padding: 1rem;
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  background-color: #ffffff;
+  background-color: var(--color-bg-card);
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07),
-    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--color-shadow);
   padding: 32px;
 }
 
@@ -98,13 +97,13 @@ async function handleLogin() {
   text-align: center;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin: 0 0 4px;
 }
 
 .app-subtitle {
   text-align: center;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0 0 2rem;
   font-size: 0.9rem;
 }
@@ -124,28 +123,29 @@ async function handleLogin() {
 .form-group label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .form-group input {
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--color-text-primary);
+  background: var(--color-bg-input);
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
 
 .form-group input:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .btn-submit {
   margin-top: 0.5rem;
   height: 42px;
-  background-color: #0d9488;
+  background-color: var(--color-accent);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
@@ -160,7 +160,7 @@ async function handleLogin() {
 }
 
 .btn-submit:hover:not(:disabled) {
-  background-color: #0f766e;
+  background-color: var(--color-accent-hover);
 }
 
 .btn-submit:disabled {
@@ -187,11 +187,11 @@ async function handleLogin() {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .form-link {
-  color: #0d9488;
+  color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
 }

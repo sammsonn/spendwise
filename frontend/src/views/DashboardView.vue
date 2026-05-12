@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import api from '@/api'
 import { useAuthStore } from '@/stores/auth'
+import { useCategoryStore } from '@/stores/categories'
 import ChartPie from '@/components/ChartPie.vue'
 import ChartBar from '@/components/ChartBar.vue'
+import ChartLine from '@/components/ChartLine.vue'
 
+import { useGoalStore } from '@/stores/goals'
+
+const router = useRouter()
 const authStore = useAuthStore()
+const categoryStore = useCategoryStore()
+const goalStore = useGoalStore()
 
 /* ---- Month selector ---- */
 const now = new Date()
@@ -131,15 +138,68 @@ async function fetchRecentTransactions() {
 
 /* ---- Fetch everything ---- */
 async function fetchAll() {
-  await Promise.all([fetchSummary(), fetchByCategory(), fetchMonthlyEvolution(), fetchRecentTransactions()])
+  await Promise.all([fetchSummary(), fetchByCategoryWithIds(), fetchMonthlyEvolution(), fetchRecentTransactions(), fetchBalanceTrend()])
 }
 
-onMounted(fetchAll)
+onMounted(() => {
+  categoryStore.fetchCategories()
+  goalStore.fetchGoals()
+  fetchAll()
+})
+
+/* ---- Balance trend (line) ---- */
+const trendLabels = ref<string[]>([])
+const trendData = ref<number[]>([])
+
+async function fetchBalanceTrend() {
+  try {
+    const { data } = await api.get('/stats/balance-trend/', {
+      params: { month: selectedMonth.value, year: selectedYear.value },
+    })
+    trendLabels.value = data.map((d: any) => d.label)
+    trendData.value = data.map((d: any) => d.balance)
+  } catch {
+    trendLabels.value = []
+    trendData.value = []
+  }
+}
+
+/* ---- Pie click handler ---- */
+const categoryIds = ref<number[]>([])
+
+async function fetchByCategoryWithIds() {
+  try {
+    const { data } = await api.get('/stats/by-category/', {
+      params: { month: selectedMonth.value, year: selectedYear.value, type: 'expense' },
+    })
+    categoryLabels.value = data.map((c: any) => c.category)
+    categoryData.value = data.map((c: any) => Number(c.total))
+    categoryColors.value = data.map((c: any) => c.color || '#6366f1')
+    categoryIds.value = data.map((c: any) => {
+      const found = categoryStore.categories.find((cat) => cat.name === c.category)
+      return found?.id || 0
+    })
+  } catch {
+    categoryLabels.value = []
+    categoryData.value = []
+    categoryColors.value = []
+    categoryIds.value = []
+  }
+}
+
+function handlePieClick(index: number) {
+  const catId = categoryIds.value[index]
+  if (catId) {
+    router.push({ path: '/transactions', query: { category: String(catId) } })
+  }
+}
 
 /* ---- Formatting ---- */
 function formatCurrency(value: number): string {
   return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+
+const topGoals = computed(() => goalStore.goals.slice(0, 3))
 </script>
 
 <template>
@@ -176,11 +236,39 @@ function formatCurrency(value: number): string {
     <div class="charts-row">
       <div class="chart-card">
         <h2 class="chart-title">Expenses by Category</h2>
-        <ChartPie :labels="categoryLabels" :data="categoryData" :colors="categoryColors" />
+        <ChartPie :labels="categoryLabels" :data="categoryData" :colors="categoryColors" @slice-click="handlePieClick" />
       </div>
       <div class="chart-card">
         <h2 class="chart-title">Monthly Overview</h2>
         <ChartBar :labels="barLabels" :income-data="barIncome" :expense-data="barExpenses" />
+      </div>
+    </div>
+
+    <!-- Balance Trend -->
+    <div class="chart-card" style="margin-bottom: 20px;">
+      <h2 class="chart-title">Balance Trend</h2>
+      <ChartLine :labels="trendLabels" :data="trendData" label="Cumulative Balance" />
+    </div>
+
+    <!-- Goals Widget -->
+    <div v-if="topGoals.length" class="recent-card" style="margin-bottom: 20px;">
+      <div class="recent-header">
+        <h2 class="chart-title">Savings Goals</h2>
+        <RouterLink to="/goals" class="view-all-link">View all</RouterLink>
+      </div>
+      <div class="goals-widget">
+        <div v-for="goal in topGoals" :key="goal.id" class="goal-widget-item">
+          <div class="goal-widget-header">
+            <span class="goal-widget-name">{{ goal.name }}</span>
+            <span class="goal-widget-pct" :class="goal.percentage >= 100 ? 'text-complete' : ''">{{ goal.percentage.toFixed(0) }}%</span>
+          </div>
+          <div class="goal-widget-bar">
+            <div class="goal-widget-fill" :class="goal.percentage >= 100 ? 'fill-complete' : ''" :style="{ width: Math.min(goal.percentage, 100) + '%' }"></div>
+          </div>
+          <div class="goal-widget-amounts">
+            {{ formatCurrency(Number(goal.current_amount)) }} / {{ formatCurrency(Number(goal.target_amount)) }} {{ authStore.currencySymbol }}
+          </div>
+        </div>
       </div>
     </div>
 
@@ -236,7 +324,7 @@ function formatCurrency(value: number): string {
 .page-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 .month-selector {
@@ -246,21 +334,20 @@ function formatCurrency(value: number): string {
 
 .month-selector select {
   padding: 8px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.95rem;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .month-selector select:focus {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
-/* ---- Summary Cards ---- */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -269,10 +356,10 @@ function formatCurrency(value: number): string {
 }
 
 .card {
-  background: #ffffff;
+  background: var(--color-bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -280,21 +367,21 @@ function formatCurrency(value: number): string {
 }
 
 .card--income {
-  border-left-color: #059669;
+  border-left-color: var(--color-income);
 }
 
 .card--expenses {
-  border-left-color: #e11d48;
+  border-left-color: var(--color-expense);
 }
 
 .card--balance {
-  border-left-color: #0d9488;
+  border-left-color: var(--color-accent);
 }
 
 .card-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .card-amount {
@@ -303,18 +390,17 @@ function formatCurrency(value: number): string {
 }
 
 .income-amount {
-  color: #059669;
+  color: var(--color-income);
 }
 
 .expenses-amount {
-  color: #e11d48;
+  color: var(--color-expense);
 }
 
 .balance-amount {
-  color: #0d9488;
+  color: var(--color-accent);
 }
 
-/* ---- Charts ---- */
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -323,25 +409,24 @@ function formatCurrency(value: number): string {
 }
 
 .chart-card {
-  background: #ffffff;
+  background: var(--color-bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
 }
 
 .chart-title {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin-bottom: 16px;
 }
 
-/* ---- Recent Transactions ---- */
 .recent-card {
-  background: #ffffff;
+  background: var(--color-bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--color-shadow);
 }
 
 .recent-header {
@@ -358,7 +443,7 @@ function formatCurrency(value: number): string {
 .view-all-link {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #0d9488;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -378,15 +463,15 @@ function formatCurrency(value: number): string {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .recent-table td {
   padding: 10px 12px;
   font-size: 0.875rem;
-  color: #0f172a;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .category-cell {
@@ -408,21 +493,79 @@ function formatCurrency(value: number): string {
 }
 
 .amount-income {
-  color: #059669;
+  color: var(--color-income);
 }
 
 .amount-expense {
-  color: #e11d48;
+  color: var(--color-expense);
 }
 
 .empty-state {
   text-align: center;
   padding: 24px 16px;
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
   font-size: 0.875rem;
 }
 
-/* ---- Responsive ---- */
+.goals-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.goal-widget-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-widget-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.goal-widget-pct {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.goal-widget-pct.text-complete {
+  color: var(--color-income);
+}
+
+.goal-widget-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-border-light);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.goal-widget-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.goal-widget-fill.fill-complete {
+  background: var(--color-income);
+}
+
+.goal-widget-amounts {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 768px) {
   .summary-cards {
     grid-template-columns: 1fr;

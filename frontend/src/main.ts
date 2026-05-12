@@ -8,6 +8,10 @@ import 'vue-toastification/dist/index.css'
 import App from './App.vue'
 import router from './router'
 
+if (localStorage.getItem('dark_mode') === 'true') {
+  document.documentElement.classList.add('dark')
+}
+
 const toastOptions: PluginOptions = {
   timeout: 3000,
   closeOnClick: true,
