@@ -1,0 +1,117 @@
+version: "3"
+
+vars:
+  VENV: backend/venv/bin
+  MANAGE: "{{.VENV}}/python backend/manage.py"
+
+tasks:
+  # ── Docker ──────────────────────────────────────────────
+
+  up:
+    desc: Start all services with Docker Compose
+    cmd: docker compose up -d --build
+
+  down:
+    desc: Stop all Docker services
+    cmd: docker compose down
+
+  logs:
+    desc: Tail Docker logs (all services)
+    cmd: docker compose logs -f {{.CLI_ARGS}}
+
+  restart:
+    desc: Restart all Docker services
+    cmds:
+      - docker compose down
+      - docker compose up -d --build
+
+  # ── Backend (local dev) ─────────────────────────────────
+
+  backend:install:
+    desc: Create venv and install backend dependencies
+    cmds:
+      - python3 -m venv backend/venv
+      - "{{.VENV}}/pip install -r backend/requirements.txt"
+    status:
+      - test -d backend/venv
+
+  backend:run:
+    desc: Run Django dev server
+    cmd: "{{.MANAGE}} runserver"
+
+  backend:migrate:
+    desc: Run Django migrations
+    cmd: "{{.MANAGE}} migrate"
+
+  backend:makemigrations:
+    desc: Create new Django migrations
+    cmd: "{{.MANAGE}} makemigrations {{.CLI_ARGS}}"
+
+  backend:shell:
+    desc: Open Django shell
+    cmd: "{{.MANAGE}} shell"
+
+  backend:superuser:
+    desc: Create a Django superuser
+    cmd: "{{.MANAGE}} createsuperuser"
+
+  backend:fixtures:
+    desc: Load currency fixtures
+    cmd: "{{.MANAGE}} loaddata transactions/fixtures/currencies.json"
+
+  backend:check:
+    desc: Run Django system checks
+    cmd: "{{.MANAGE}} check"
+
+  # ── Frontend (local dev) ────────────────────────────────
+
+  frontend:install:
+    desc: Install frontend dependencies
+    dir: frontend
+    cmd: npm ci
+
+  frontend:dev:
+    desc: Start Vite dev server
+    dir: frontend
+    cmd: npm run dev
+
+  frontend:build:
+    desc: Build frontend for production
+    dir: frontend
+    cmd: npm run build
+
+  frontend:typecheck:
+    desc: Run TypeScript type checking
+    dir: frontend
+    cmd: npm run type-check
+
+  frontend:preview:
+    desc: Preview production build
+    dir: frontend
+    cmd: npm run preview
+
+  # ── Combined ────────────────────────────────────────────
+
+  install:
+    desc: Install all dependencies (backend + frontend)
+    cmds:
+      - task: backend:install
+      - task: frontend:install
+
+  dev:
+    desc: Start backend and frontend dev servers
+    deps:
+      - backend:run
+      - frontend:dev
+
+  lint:
+    desc: Run all checks (Django check + TypeScript)
+    cmds:
+      - task: backend:check
+      - task: frontend:typecheck
+
+  seed:
+    desc: Run migrations and load fixtures
+    cmds:
+      - task: backend:migrate
+      - task: backend:fixtures

@@ -6,28 +6,28 @@
       <button class="btn btn-primary" @click="openAddModal">Add Transaction</button>
     </div>
 
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <button class="btn btn-secondary" @click="triggerImportCSV">Import CSV</button>
-      <input
-        ref="csvFileInput"
-        type="file"
-        accept=".csv"
-        style="display: none"
-        @change="handleImportCSV"
-      />
-      <button class="btn btn-secondary" @click="transactionStore.exportCSV()">Export CSV</button>
-      <button class="btn btn-secondary" @click="transactionStore.exportPDF()">Export PDF</button>
-    </div>
-
-    <!-- Date Presets -->
+    <!-- Date Presets + Import/Export -->
     <div class="date-presets">
-      <button class="btn btn-preset" :class="{ active: activePreset === 'week' }" @click="setPreset('week')">This Week</button>
-      <button class="btn btn-preset" :class="{ active: activePreset === '7days' }" @click="setPreset('7days')">Last 7 Days</button>
-      <button class="btn btn-preset" :class="{ active: activePreset === 'month' }" @click="setPreset('month')">This Month</button>
-      <button class="btn btn-preset" :class="{ active: activePreset === '30days' }" @click="setPreset('30days')">Last 30 Days</button>
-      <button class="btn btn-preset" :class="{ active: activePreset === 'year' }" @click="setPreset('year')">This Year</button>
-      <button v-if="activePreset" class="btn btn-preset" @click="clearPreset">Clear</button>
+      <div class="preset-buttons">
+        <button class="btn btn-preset" :class="{ active: activePreset === 'week' }" @click="setPreset('week')">This Week</button>
+        <button class="btn btn-preset" :class="{ active: activePreset === '7days' }" @click="setPreset('7days')">Last 7 Days</button>
+        <button class="btn btn-preset" :class="{ active: activePreset === 'month' }" @click="setPreset('month')">This Month</button>
+        <button class="btn btn-preset" :class="{ active: activePreset === '30days' }" @click="setPreset('30days')">Last 30 Days</button>
+        <button class="btn btn-preset" :class="{ active: activePreset === 'year' }" @click="setPreset('year')">This Year</button>
+        <button v-if="activePreset" class="btn btn-preset" @click="clearPreset">Clear</button>
+      </div>
+      <div class="toolbar-buttons">
+        <button class="btn btn-secondary" @click="triggerImportCSV">Import CSV</button>
+        <input
+          ref="csvFileInput"
+          type="file"
+          accept=".csv"
+          style="display: none"
+          @change="handleImportCSV"
+        />
+        <button class="btn btn-secondary" @click="transactionStore.exportCSV()">Export CSV</button>
+        <button class="btn btn-secondary" @click="transactionStore.exportPDF()">Export PDF</button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -400,17 +400,24 @@ async function handleImportCSV(event: Event) {
   margin: 0;
 }
 
-.toolbar {
+.date-presets {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
-.date-presets {
+.preset-buttons {
   display: flex;
   gap: 6px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
   flex-wrap: wrap;
 }
 

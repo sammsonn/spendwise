@@ -106,6 +106,7 @@ async function saveProfile() {
       last_name: form.last_name,
       email: form.email,
       preferred_currency: selectedCurrency.value,
+      dark_mode: authStore.darkMode,
     })
     await authStore.fetchProfile()
     toast.success('Profile updated successfully')
@@ -124,6 +125,7 @@ async function saveCurrency() {
       last_name: form.last_name,
       email: form.email,
       preferred_currency: selectedCurrency.value,
+      dark_mode: authStore.darkMode,
     })
     await authStore.fetchProfile()
     toast.success('Currency preference updated')
