@@ -85,6 +85,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     )
     dark_mode = serializers.BooleanField(
         source='profile.dark_mode',
+        required=False,
     )
 
     class Meta:

@@ -32,8 +32,8 @@ async function handleRegister() {
       password: password.value,
       password_confirm: passwordConfirm.value,
     })
-    toast.success('Account created successfully! Please log in.')
-    router.push('/login')
+    toast.success('Account created successfully!')
+    router.push('/')
   } catch (err: any) {
     const data = err?.response?.data
     if (data && typeof data === 'object') {
@@ -193,6 +193,7 @@ async function handleRegister() {
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0;
 }
 
 .form-group {

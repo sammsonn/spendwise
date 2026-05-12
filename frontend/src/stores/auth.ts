@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
     applyTheme()
     if (isAuthenticated.value) {
       try {
-        await api.put('/auth/profile/', { dark_mode: darkMode.value })
+        await api.patch('/auth/profile/', { dark_mode: darkMode.value })
       } catch {
         // theme applied locally even if sync fails
       }
