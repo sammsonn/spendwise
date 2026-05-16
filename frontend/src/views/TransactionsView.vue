@@ -139,10 +139,14 @@
         <form @submit.prevent="saveTransaction">
           <div class="form-group">
             <label>Amount</label>
-            <input v-model="form.amount" type="number" step="0.01" required />
+            <input v-model="form.amount" type="text" inputmode="decimal" required />
           </div>
           <div class="form-group">
-            <label>Category</label>
+            <label>Description</label>
+            <input v-model="form.description" type="text" @blur="suggestCategory" />
+          </div>
+          <div class="form-group">
+            <label>Category <span v-if="aiSuggesting" class="ai-suggesting">AI suggesting...</span></label>
             <select v-model="form.category">
               <option :value="null">None</option>
               <option v-for="cat in categoryStore.categories" :key="cat.id" :value="cat.id">
@@ -153,10 +157,6 @@
           <div class="form-group">
             <label>Date</label>
             <input v-model="form.date" type="date" required />
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <input v-model="form.description" type="text" />
           </div>
           <div class="form-group checkbox-group">
             <label>
@@ -190,6 +190,7 @@ import { useTransactionStore, type Transaction } from '@/stores/transactions'
 import { useCategoryStore } from '@/stores/categories'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import api from '@/api'
 
 const toast = useToast()
 const route = useRoute()
@@ -225,6 +226,24 @@ const form = reactive({
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(transactionStore.totalCount / PAGE_SIZE)))
+
+const aiSuggesting = ref(false)
+
+async function suggestCategory() {
+  const desc = form.description.trim()
+  if (desc.length < 3 || form.category) return
+  aiSuggesting.value = true
+  try {
+    const { data } = await api.post('/ai/categorize/', { description: desc })
+    if (data.category_id != null) {
+      form.category = data.category_id
+    }
+  } catch {
+    // silently ignore — auto-categorize is best-effort
+  } finally {
+    aiSuggesting.value = false
+  }
+}
 
 onMounted(async () => {
   if (route.query.category) {
@@ -725,6 +744,13 @@ tbody tr:hover {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 24px;
+}
+
+.ai-suggesting {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-accent);
+  margin-left: 4px;
 }
 
 @media (max-width: 640px) {

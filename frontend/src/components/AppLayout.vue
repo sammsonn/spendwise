@@ -39,6 +39,9 @@ function logout() {
         <RouterLink to="/reports" class="nav-link" :class="{ active: route.path.startsWith('/reports') }">
           Reports
         </RouterLink>
+        <RouterLink to="/chat" class="nav-link" :class="{ active: route.path.startsWith('/chat') }">
+          AI Assistant
+        </RouterLink>
         <RouterLink to="/settings" class="nav-link" :class="{ active: route.path.startsWith('/settings') }">
           Settings
         </RouterLink>
