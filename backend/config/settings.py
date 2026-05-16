@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'transactions',
     'budgets',
     'goals',
+    'ai_assistant',
 ]
 
 MIDDLEWARE = [
@@ -110,3 +111,5 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:5173,http://localhost'
 ).split(',')
+
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
