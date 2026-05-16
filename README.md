@@ -4,12 +4,13 @@ A personal finance management application built with Django REST Framework and V
 
 ## Tech Stack
 
-| Layer    | Technology                                      |
-| -------- | ----------------------------------------------- |
+| Layer    | Technology                                              |
+| -------- | ------------------------------------------------------- |
 | Backend  | Python 3.12, Django 6.0.5, Django REST Framework, SimpleJWT |
-| Frontend | Vue 3, TypeScript, Vite, Pinia, Chart.js        |
-| Database | PostgreSQL 16                                   |
-| Infra    | Docker, Nginx, Gunicorn                         |
+| Frontend | Vue 3, TypeScript, Vite, Pinia, Chart.js                |
+| Database | PostgreSQL 16                                           |
+| AI       | Google Gemini 2.0 Flash                                 |
+| Infra    | Docker, Nginx, Gunicorn                                 |
 
 ## Features
 
@@ -23,6 +24,8 @@ A personal finance management application built with Django REST Framework and V
 - **Data Visualization** — Interactive pie, bar, and line charts (Chart.js)
 - **Import/Export** — CSV import and export, PDF report generation
 - **Multi-Currency** — Configurable preferred currency per user
+- **AI Auto-Categorization** — Automatically suggests a transaction category based on the description using Google Gemini
+- **AI Financial Assistant** — Chat interface for asking questions about your spending, budgets, and goals with AI-powered answers based on your actual data
 - **Dark Mode** — System-wide dark theme with per-user persistence
 - **Authentication** — JWT-based auth with registration, login, and token refresh
 
@@ -77,6 +80,7 @@ task dev
 | `DB_USER`              | `spendwise`                   | PostgreSQL user              |
 | `DB_PASSWORD`          | `spendwise123`                | PostgreSQL password          |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost`            | Comma-separated CORS origins |
+| `GEMINI_API_KEY`       | (none)                        | Google Gemini API key for AI features |
 
 ## Project Structure
 
@@ -86,6 +90,7 @@ task dev
 │   ├── transactions/       # Core app: models, views, serializers, fixtures
 │   ├── budgets/            # Budget tracking app
 │   ├── goals/              # Savings goals app
+│   ├── ai_assistant/       # AI features: Gemini integration, categorize & chat
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
@@ -122,6 +127,8 @@ task dev
 | `/api/stats/by-category/`     | GET             | Spending breakdown by category |
 | `/api/stats/balance-trend/`   | GET             | 6-month cumulative balance     |
 | `/api/stats/monthly-report/`  | GET             | Month-over-month comparison    |
+| `/api/ai/categorize/`         | POST            | AI-powered category suggestion |
+| `/api/ai/chat/`               | POST            | AI financial assistant chat    |
 
 ## Available Tasks
 
