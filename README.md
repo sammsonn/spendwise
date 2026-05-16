@@ -9,7 +9,7 @@ A personal finance management application built with Django REST Framework and V
 | Backend  | Python 3.12, Django 6.0.5, Django REST Framework, SimpleJWT |
 | Frontend | Vue 3, TypeScript, Vite, Pinia, Chart.js                |
 | Database | PostgreSQL 16                                           |
-| AI       | Google Gemini 2.0 Flash                                 |
+| AI       | Google Gemini 3.1 Flash Lite                                 |
 | Infra    | Docker, Nginx, Gunicorn                                 |
 
 ## Features
