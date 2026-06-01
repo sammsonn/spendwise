@@ -92,7 +92,7 @@ watch(
           :disabled="chatStore.loading"
         />
         <button class="btn btn-primary send-btn" @click="send" :disabled="!input.trim() || chatStore.loading">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
     </div>
@@ -280,14 +280,19 @@ watch(
 }
 
 .send-btn {
-  width: 42px;
-  height: 42px;
+  width: 54px;
+  height: 54px;
   padding: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.send-btn svg {
+  width: 34px;
+  height: 34px;
 }
 
 .send-btn:disabled {
